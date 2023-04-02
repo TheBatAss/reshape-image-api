@@ -8,24 +8,35 @@ import numpy as np
 
 app = Flask(__name__)
 PORT = 5000
-
 VALID_IMAGE_FORMATS = ['jpg', 'jpeg', 'png']
+
+
+def validate_input(request_json, required_fields):
+    for field, type in required_fields.items():
+        # Check that required field is in the request
+        if field not in request_json:
+            return jsonify({'error': f"Missing property: '{field}'"}), 400
+        # Check that type is correct
+        if not isinstance(request.json[field], type):
+            return jsonify({'error': f"'{field}' is not of type '{type.__name__}'"}), 400
+        # If image url, check that the format is correct
+        if 'image_url' in field:
+            file_ext = request.json[field].split('.')[-1].lower()
+            if file_ext not in VALID_IMAGE_FORMATS:
+                return jsonify({'error': 'Invalid file format. Only JPG, JPEG and PNG files are allowed.'}), 400
+    return None
 
 
 @app.route('/get_image_hash', methods=['POST'])
 def get_image_hash():
-    # Validate required fields are present
-    if 'image_url' not in request.json:
-        return jsonify({'error': "Missing property 'image_url'"}), 400
-
-    image_url = request.json['image_url']
-
-    # Validate image format
-    file_ext = image_url.split('.')[-1].lower()
-    if file_ext not in VALID_IMAGE_FORMATS:
-        return jsonify({'error': 'Invalid file format. Only JPG, JPEG and PNG files are allowed.'}), 400
+    # Validate input
+    required_fields = {'image_url': str}
+    validation_result = validate_input(request.json, required_fields)
+    if validation_result is not None:
+        return validation_result
 
     # Load image, convert to binary and get the hash
+    image_url = request.json['image_url']
     try:
         image_data = urllib.request.urlopen(image_url).read()
     except urllib.error.URLError as e:
@@ -37,22 +48,15 @@ def get_image_hash():
 
 @app.route('/center_crop', methods=['POST'])
 def center_crop():
-    # Validate required fields are present
-    if 'image_url' not in request.json:
-        return jsonify({'error': "Missing property 'image_url'"}), 400
-    if 'width' not in request.json:
-        return jsonify({'error': "Missing property 'width'"}), 400
-    if 'height' not in request.json:
-        return jsonify({'error': "Missing property 'height'"}), 400
+    # Validate input
+    required_fields = {'image_url': str, 'width': int, 'height': int}
+    validation_result = validate_input(request.json, required_fields)
+    if validation_result is not None:
+        return validation_result
 
     image_url = request.json['image_url']
     width = request.json['width']
     height = request.json['height']
-
-    # Validate image format
-    file_ext = image_url.split('.')[-1].lower()
-    if file_ext not in VALID_IMAGE_FORMATS:
-        return jsonify({'error': 'Invalid file format. Only JPG, JPEG and PNG files are allowed.'}), 400
 
     # Load image and convert into binary
     try:
@@ -89,33 +93,25 @@ def center_crop():
 
 @app.route('/get_SIFT_difference', methods=['POST'])
 def get_SIFT_difference():
-    # Validate required fields are present
-    if 'image_url_1' not in request.json:
-        return jsonify({'error': "Missing property 'image_url_1'"}), 400
-    if 'image_url_2' not in request.json:
-        return jsonify({'error': "Missing property 'image_url_2'"}), 400
+    # Validate input
+    required_fields = {'image_url_1': str, 'image_url_2': str}
+    validation_result = validate_input(request.json, required_fields)
+    if validation_result is not None:
+        return validation_result
 
     image_url_1 = request.json['image_url_1']
     image_url_2 = request.json['image_url_2']
-
-    # Validate image format
-    file_ext_1 = image_url_1.split('.')[-1].lower()
-    file_ext_2 = image_url_2.split('.')[-1].lower()
-    if file_ext_1 not in VALID_IMAGE_FORMATS:
-        return jsonify({'error': 'Invalid file format for image 1. Only JPG, JPEG and PNG files are allowed.'}), 400
-    if file_ext_2 not in VALID_IMAGE_FORMATS:
-        return jsonify({'error': 'Invalid file format for image 2. Only JPG, JPEG and PNG files are allowed.'}), 400
 
     # Load images and convert into binary
     try:
         image_data_1 = urllib.request.urlopen(image_url_1).read()
         image_data_2 = urllib.request.urlopen(image_url_2).read()
-    except urllib.error.URLError as e:
-        return jsonify({'error': f"Failed to fetch image data: {e.reason}"}), 400
+    except Exception as e:
+        return jsonify({'error': f"Failed to fetch image data: {e}"}), 400
     img1 = cv2.imdecode(np.frombuffer(
-        image_data_1.read(), np.uint8), cv2.IMREAD_COLOR)
+        image_data_1, np.uint8), cv2.IMREAD_COLOR)
     img2 = cv2.imdecode(np.frombuffer(
-        image_data_2.read(), np.uint8), cv2.IMREAD_COLOR)
+        image_data_2, np.uint8), cv2.IMREAD_COLOR)
 
     # Convert images to grayscale
     img1 = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)

@@ -1,0 +1,94 @@
+{
+	"info": {
+		"_postman_id": "8ed6a604-7a27-4849-8451-3e90af750f39",
+		"name": "reshape-image-api",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "25637192"
+	},
+	"item": [
+		{
+			"name": "get_image_hash",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"image_url\": \"https://raw.githubusercontent.com/TheBatAss/reshape-image-api/main/images/cat.png\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:5000/get_image_hash",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"get_image_hash"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "center_crop",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"image_url\": \"https://raw.githubusercontent.com/TheBatAss/reshape-image-api/main/images/image0.jpeg\",\n    \"width\": 100,\n    \"height\": 200\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:5000/center_crop",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"center_crop"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "get_SIFT_difference",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"image_url_1\": \"https://raw.githubusercontent.com/TheBatAss/reshape-image-api/main/images/erased_dot_1.jpeg\",\n    \"image_url_2\": \"https://raw.githubusercontent.com/TheBatAss/reshape-image-api/main/images/erased_dot_2.jpeg\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:5000/get_SIFT_difference",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"get_SIFT_difference"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

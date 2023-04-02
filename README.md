@@ -38,3 +38,7 @@ docker-compose up
 ```
 docker-compose down
 ```
+
+## Postman
+
+This repo contains a postman collection for the 3 endpoints
