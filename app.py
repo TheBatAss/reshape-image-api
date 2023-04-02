@@ -26,7 +26,10 @@ def get_image_hash():
         return jsonify({'error': 'Invalid file format. Only JPG, JPEG and PNG files are allowed.'}), 400
 
     # Load image, convert to binary and get the hash
-    image_data = urllib.request.urlopen(image_url).read()
+    try:
+        image_data = urllib.request.urlopen(image_url).read()
+    except urllib.error.URLError as e:
+        return jsonify({'error': f"Failed to fetch image data: {e.reason}"}), 400
     img = Image.open(io.BytesIO(image_data))
     image_hash = hashlib.sha256(img.tobytes()).hexdigest()
     return {'image_hash': image_hash}
@@ -52,7 +55,10 @@ def center_crop():
         return jsonify({'error': 'Invalid file format. Only JPG, JPEG and PNG files are allowed.'}), 400
 
     # Load image and convert into binary
-    image_data = urllib.request.urlopen(image_url).read()
+    try:
+        image_data = urllib.request.urlopen(image_url).read()
+    except urllib.error.URLError as e:
+        return jsonify({'error': f"Failed to fetch image data: {e.reason}"}), 400
     img = Image.open(io.BytesIO(image_data))
 
     # Validate that new width and height is equal or less than original
@@ -101,11 +107,13 @@ def get_SIFT_difference():
         return jsonify({'error': 'Invalid file format for image 2. Only JPG, JPEG and PNG files are allowed.'}), 400
 
     # Load images and convert into binary
-    image_data_1 = io.BytesIO(urllib.request.urlopen(image_url_1).read())
+    try:
+        image_data_1 = urllib.request.urlopen(image_url_1).read()
+        image_data_2 = urllib.request.urlopen(image_url_2).read()
+    except urllib.error.URLError as e:
+        return jsonify({'error': f"Failed to fetch image data: {e.reason}"}), 400
     img1 = cv2.imdecode(np.frombuffer(
         image_data_1.read(), np.uint8), cv2.IMREAD_COLOR)
-
-    image_data_2 = io.BytesIO(urllib.request.urlopen(image_url_2).read())
     img2 = cv2.imdecode(np.frombuffer(
         image_data_2.read(), np.uint8), cv2.IMREAD_COLOR)
 

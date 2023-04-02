@@ -15,7 +15,9 @@
  pip install -r requirements.txt
 ```
 
-2. Start the Flask server by running the following command:
+2. On linux you might have to install additional dependencies `ffmpeg`, `libsm6` and `libxext6`
+
+3. Start the Flask server by running the following command:
 
 ```
 python app.py
@@ -25,7 +27,7 @@ python app.py
 
 ## Running with Docker Compose
 
-- Start up the API
+- Start up the API (might take a minute the first time around)
 
 ```
 docker-compose up
