@@ -3,6 +3,8 @@ import hashlib
 from PIL import Image
 import urllib.request
 import io
+import cv2
+import numpy as np
 
 app = Flask(__name__)
 PORT = 5000
@@ -77,6 +79,57 @@ def center_crop():
     output_buffer.seek(0)
 
     return send_file(output_buffer, mimetype='image/jpeg')
+
+
+@app.route('/get_SIFT_difference', methods=['POST'])
+def get_SIFT_difference():
+    # Validate required fields are present
+    if 'image_url_1' not in request.json:
+        return jsonify({'error': "Missing property 'image_url_1'"}), 400
+    if 'image_url_2' not in request.json:
+        return jsonify({'error': "Missing property 'image_url_2'"}), 400
+
+    image_url_1 = request.json['image_url_1']
+    image_url_2 = request.json['image_url_2']
+
+    # Validate image format
+    file_ext_1 = image_url_1.split('.')[-1].lower()
+    file_ext_2 = image_url_2.split('.')[-1].lower()
+    if file_ext_1 not in VALID_IMAGE_FORMATS:
+        return jsonify({'error': 'Invalid file format for image 1. Only JPG, JPEG and PNG files are allowed.'}), 400
+    if file_ext_2 not in VALID_IMAGE_FORMATS:
+        return jsonify({'error': 'Invalid file format for image 2. Only JPG, JPEG and PNG files are allowed.'}), 400
+
+    # Load images and convert into binary
+    image_data_1 = io.BytesIO(urllib.request.urlopen(image_url_1).read())
+    img1 = cv2.imdecode(np.frombuffer(
+        image_data_1.read(), np.uint8), cv2.IMREAD_COLOR)
+
+    image_data_2 = io.BytesIO(urllib.request.urlopen(image_url_2).read())
+    img2 = cv2.imdecode(np.frombuffer(
+        image_data_2.read(), np.uint8), cv2.IMREAD_COLOR)
+
+    # Convert images to grayscale
+    img1 = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
+    img2 = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
+
+    # Initialize SIFT detector
+    sift = cv2.SIFT_create()
+
+    # Find key points and descriptors for both images
+    kp1, des1 = sift.detectAndCompute(img1, None)
+    kp2, des2 = sift.detectAndCompute(img2, None)
+
+    # Initialize BFMatcher (Brute-Force Matcher)
+    bf = cv2.BFMatcher()
+
+    # Match descriptors of both images
+    matches = bf.match(des1, des2)
+
+    # Calculate the difference between the two images based on the matched key points
+    diff = sum([match.distance for match in matches])/len(matches)
+
+    return {'SIFT_score': diff}
 
 
 if __name__ == '__main__':
